@@ -1,37 +1,60 @@
 ﻿using System;
 
 namespace BankingLibrary {
-    public class Account {
+    public abstract class Account {
 
-        public decimal Balance { get; set; } //cannot deposit or withdraw anything < 1 or withdraw any more than what is in the balance
-        public int AcctNbr { get; set; } //acctnbr needs a unique value
-        public string Description { get; set; }
-        private int NextNbr = 0;
+        public decimal Balance { get; set; } 
+        public int AcctNbr { get; private set; }
+        public string Description { get; set; } = "Account";
+        
+        private static int NextAcctNbr = 1;
+        private const int AcctNbrInc = 9;
+        private int AttemptsToOverdraw = 0;
 
         public void Deposit(decimal amount) {
-            if (amount > 0) {
+            if (isAmountGTZero(amount)) {
                 Balance += amount;
-            } else{
-                Console.WriteLine("Cannot Deposit");
             }
         }
 
-        public void Withdraw(decimal amount) {
-            if (amount > 0 && amount <= Balance) {
+        public bool Withdraw(decimal amount) {
+            if (isAmountGTZero(amount) && isSufficentFunds(amount)) {
                 Balance -= amount;
-            } else {
-                Console.WriteLine("Cannot Withdraw");
+                return true;
             }
+            return false;
         }
 
-        public void Transfer(decimal amount, Account toAccount, Account fromAccount){
-            fromAccount.Withdraw(amount);
-            toAccount.Deposit(amount);
+        private bool isSufficentFunds (decimal amount) {
+            if (Balance >= amount) {
+                return true;
+            }
+            AttemptsToOverdraw++;
+            return false;
+        }
+
+        private bool isAmountGTZero(decimal amount) {
+            return (amount <= 0) ? false : true;
+        }
+
+        public void Transfer(decimal amount, Account toAccount){
+            if (this.Withdraw(amount)) {
+                toAccount.Deposit(amount);
+            }
          }
 
         public Account() {
-            AcctNbr = NextNbr += 1;
-            }   
+            this.AcctNbr = NextAcctNbr;
+            NextAcctNbr += AcctNbrInc;
+        }
+
+        public override string ToString() {
+            return $"{AcctNbr}. {Description} with a balance of {Balance}.";
+        }
+
+        public void Debug() {
+            Console.WriteLine(this);
+        }
 
     }
 }
